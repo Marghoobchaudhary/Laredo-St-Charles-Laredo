@@ -1,24 +1,31 @@
 # Laredo – St Charles GitHub-only Scraper
 
-Runs a headless Selenium scraper in **GitHub Actions** (no local setup) and commits `st-charles-county.json` to the repo root.
 
-## Setup
-1. Add **Repository Secrets** (Settings → Secrets and variables → Actions → New repository secret):
-   - `LAREDO_URL` – direct URL to the PrimeNG results table for St Charles.
-   - `LAREDO_USERNAME` / `LAREDO_PASSWORD` – if the site requires login (optional; login stub present).
-   - Optional: `LAREDO_IFRAME` and/or `LAREDO_TABLE` if selectors are needed to reach the table.
-2. Commit these files to your repo:
-   - `laredo.py`
-   - `.github/workflows/laredo.yml`
-   - `requirements.txt`
-   - `README.md`
-3. Trigger the workflow via **Actions → “Laredo St Charles Scrape” → Run workflow**.
+This repo runs a headless Selenium scraper in **GitHub Actions** (no local setup) and commits `st-charles-county.json` to the repo root.
 
-## Output
-- `st-charles-county.json` committed to the repo root on success.
-- Debug artifacts (on failure or when saved): `laredo_page.html`, `laredo_page.png`, `laredo.logs`, `laredo-flow-logs.json`.
 
-## Tips
-- If the table isn’t detected, set `LAREDO_IFRAME` and/or `LAREDO_TABLE` secrets and re-run, or increase `--wait` in the workflow step.
-- To include CSV, remove `--skip-csv`; a `st-charles-county.csv` will also be written.
-- Change the output file name by adjusting `--county-slug`.
+## Setup (new repo)
+1. Create the folder structure shown above.
+2. Add the files from this README to your repo. Commit and push.
+3. Add repository **Secrets** under Settings → Secrets and variables → Actions:
+- `LAREDO_URL`
+- `LAREDO_USERNAME`, `LAREDO_PASSWORD`
+- *(optional)* `LAREDO_LOGIN_USER_CSS`, `LAREDO_LOGIN_PASS_CSS`, `LAREDO_LOGIN_SUBMIT_CSS`, `LAREDO_POST_LOGIN_WAIT`, `LAREDO_IFRAME`, `LAREDO_TABLE`
+
+
+## Run it
+- Go to **Actions → Laredo St Charles Scrape → Run workflow**.
+- After success, check the repo root for `st-charles-county.json`.
+
+
+## Troubleshooting
+- If the site shows a login page, set the three login CSS secrets and re-run.
+- If the table is inside an iframe, set `LAREDO_IFRAME`.
+- If the table rows aren’t detected, set `LAREDO_TABLE` (e.g., `table.p-datatable-table tbody tr`).
+- The action commits debug artifacts (`laredo_page.html`, `laredo_page.png`, logs) on failure to help you see what the page looked like.
+
+
+## Customizing
+- Change `--days-back` to widen/narrow results.
+- Remove `--skip-csv` to also write `st-charles-county.csv`.
+- Schedule daily runs by uncommenting the `schedule:` block in the workflow.
