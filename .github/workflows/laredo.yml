@@ -1,59 +1,77 @@
 name: Laredo St Charles Scrape
 
+
 on:
-  workflow_dispatch:
-  # To run daily at 6:15am Chicago time, uncomment:
-  # schedule:
-  #   - cron: '15 11 * * *'
+workflow_dispatch:
+# To run daily at 6:15am Chicago (CST/CDT):
+# schedule:
+# - cron: '15 11 * * *'
+
 
 permissions:
-  contents: write  # allow committing JSON back to repo
+contents: write # allow committing JSON back to repo
+
 
 jobs:
-  scrape:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+scrape:
+runs-on: ubuntu-latest
+steps:
+- name: Checkout
+uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
 
-      - name: Install Google Chrome
-        uses: browser-actions/setup-chrome@v1
+- name: Set up Python
+uses: actions/setup-python@v5
+with:
+python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
 
-      - name: Run scraper (headless)
-        env:
-          LAREDO_URL: ${{ secrets.LAREDO_URL }}
-          LAREDO_USERNAME: ${{ secrets.LAREDO_USERNAME }}
-          LAREDO_PASSWORD: ${{ secrets.LAREDO_PASSWORD }}
-          LAREDO_IFRAME: ${{ secrets.LAREDO_IFRAME }}
-          LAREDO_TABLE: ${{ secrets.LAREDO_TABLE }}
-        run: |
-          python laredo.py \
-            --headless \
-            --out . \
-            --wait 45 \
-            --days-back 2 \
-            --county-slug st-charles-county \
-            ${LAREDO_IFRAME:+--iframe-css "$LAREDO_IFRAME"} \
-            ${LAREDO_TABLE:+--table-css "$LAREDO_TABLE"} \
-            --skip-csv
+- name: Install Google Chrome
+uses: browser-actions/setup-chrome@v1
 
-      - name: Commit JSON and logs
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: 'chore(scrape): update St Charles JSON'
-          file_pattern: |
-            st-charles-county.json
-            laredo*.log
-            laredo-flow-logs.json
-            laredo_page.html
-            laredo_page.png
+
+- name: Install dependencies
+run: |
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+
+
+- name: Run scraper (headless)
+env:
+LAREDO_URL: ${{ secrets.LAREDO_URL }}
+LAREDO_USERNAME: ${{ secrets.LAREDO_USERNAME }}
+LAREDO_PASSWORD: ${{ secrets.LAREDO_PASSWORD }}
+LAREDO_IFRAME: ${{ secrets.LAREDO_IFRAME }}
+LAREDO_TABLE: ${{ secrets.LAREDO_TABLE }}
+LAREDO_LOGIN_USER_CSS: ${{ secrets.LAREDO_LOGIN_USER_CSS }}
+LAREDO_LOGIN_PASS_CSS: ${{ secrets.LAREDO_LOGIN_PASS_CSS }}
+LAREDO_LOGIN_SUBMIT_CSS: ${{ secrets.LAREDO_LOGIN_SUBMIT_CSS }}
+LAREDO_POST_LOGIN_WAIT: ${{ secrets.LAREDO_POST_LOGIN_WAIT }}
+shell: bash
+run: |
+set -euo pipefail
+python laredo.py \
+--headless \
+--out . \
+--wait 45 \
+--days-back 2 \
+--county-slug st-charles-county \
+${LAREDO_IFRAME:+--iframe-css "$LAREDO_IFRAME"} \
+${LAREDO_TABLE:+--table-css "$LAREDO_TABLE"} \
+${LAREDO_LOGIN_USER_CSS:+--login-username-css "$LAREDO_LOGIN_USER_CSS"} \
+${LAREDO_LOGIN_PASS_CSS:+--login-password-css "$LAREDO_LOGIN_PASS_CSS"} \
+${LAREDO_LOGIN_SUBMIT_CSS:+--login-submit-css "$LAREDO_LOGIN_SUBMIT_CSS"} \
+${LAREDO_POST_LOGIN_WAIT:+--post-login-wait "$LAREDO_POST_LOGIN_WAIT"} \
+--skip-csv
+
+
+- name: Commit JSON and logs
+uses: stefanzweifel/git-auto-commit-action@v5
+with:
+commit_message: 'chore(scrape): update St Charles JSON'
+file_pattern: |
+st-charles-county.json
+laredo*.log
+laredo-flow-logs.json
+laredo_page.html
+laredo_page.png
