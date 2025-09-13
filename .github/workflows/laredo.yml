@@ -1,1 +1,64 @@
 
+name: Laredo St Charles Scrape
+
+
+on:
+workflow_dispatch:
+# Uncomment to run daily at 6:15am Chicago
+# schedule:
+# - cron: '15 11 * * *'
+
+
+permissions:
+contents: write # needed to commit the JSON back to repo
+
+
+jobs:
+scrape:
+runs-on: ubuntu-latest
+steps:
+- name: Checkout
+uses: actions/checkout@v4
+
+
+- name: Set up Python
+uses: actions/setup-python@v5
+with:
+python-version: '3.11'
+
+
+- name: Install Google Chrome
+uses: browser-actions/setup-chrome@v1
+
+
+- name: Install dependencies
+run: |
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+
+
+- name: Run scraper (headless)
+env:
+LAREDO_URL: ${{ secrets.LAREDO_URL }}
+LAREDO_USERNAME: ${{ secrets.LAREDO_USERNAME }}
+LAREDO_PASSWORD: ${{ secrets.LAREDO_PASSWORD }}
+run: |
+python laredo.py \
+--headless \
+--out . \
+--wait 45 \
+--days-back 2 \
+--county-slug st-charles-county \
+${LAREDO_IFRAME:+--iframe-css "$LAREDO_IFRAME"} \
+${LAREDO_TABLE:+--table-css "$LAREDO_TABLE"} \
+--skip-csv
+
+
+- name: Commit JSON and logs
+uses: stefanzweifel/git-auto-commit-action@v5
+with:
+commit_message: 'chore(scrape): update St Charles JSON'
+file_pattern: |
+st-charles-county.json
+laredo*.log
+laredo-flow-logs.json
